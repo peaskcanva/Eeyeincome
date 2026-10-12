@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>บันทึกรายได้พยาบาลไตเทียม</title>
+<style>
+:root{--bg:#f4f7f8;--card:#fff;--ink:#17313b;--muted:#647780;--accent:#087e8b;--line:#dce5e8;--soft:#e5f4f4;--danger:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:auto;padding:20px 14px 50px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.top h1{font-size:24px;margin:0}.muted{color:var(--muted);font-size:13px}
+nav{display:flex;gap:7px;overflow:auto;margin-bottom:15px}button{font:inherit;cursor:pointer;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:10px 13px}button.active,.primary{background:var(--accent);color:white;border-color:var(--accent)}button.danger{color:var(--danger)}.monthbar{display:flex;align-items:center;gap:8px;margin-bottom:14px}.monthbar strong{flex:1;text-align:center}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:16px;margin-bottom:12px;min-width:0}.metric{font-size:clamp(20px,4vw,28px);font-weight:750;overflow-wrap:anywhere;margin-top:5px}.label{font-size:13px;color:var(--muted)}h2{font-size:18px;margin:0 0 13px}label{display:block;font-size:14px;margin-bottom:5px}.field{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:white;color:var(--ink);font:inherit;min-height:44px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}.hidden{display:none!important}.progress{height:9px;border-radius:20px;background:var(--line);overflow:hidden;margin:10px 0}.progress div{height:100%;background:var(--accent)}.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.day{min-height:58px;padding:4px 1px;font-size:12px;overflow:hidden}.day.selected{outline:2px solid var(--accent)}.day small{display:block;white-space:nowrap;overflow:hidden;color:var(--accent);font-size:10px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:9px 7px;border-bottom:1px solid var(--line);white-space:nowrap}.notice{padding:10px;border-radius:9px;background:var(--soft);font-size:13px;margin-top:10px}footer{font-size:12px;color:var(--muted);margin-top:16px}
+@media(max-width:520px){main{padding:14px 10px 35px}.card{padding:12px}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.day{min-height:50px}.top h1{font-size:20px}}
+</style>
+</head>
+<body><main>
+<header class="top"><div><h1>รายได้ไตเทียม</h1><div class="muted">Dialysis Income Tracker · ข้อมูลส่วนตัว</div></div><div style="text-align:right"><div class="muted">ค่ารอบ</div><strong id="rateTop">600 บาท</strong></div></header>
+<nav>
+<button class="active" data-tab="dashboard">ภาพรวม</button><button data-tab="entry">บันทึกรายได้</button><button data-tab="calendar">ปฏิทิน</button><button data-tab="history">ประวัติ / Excel</button><button data-tab="settings">ตั้งค่า</button>
+</nav>
+<div class="monthbar"><button id="prev">‹</button><strong id="monthLabel"></strong><button id="next">›</button><button id="now">เดือนนี้</button></div>
+<section id="dashboard">
+<div class="cards">
+<div class="card"><div class="label">รายได้รวมเดือนนี้</div><div class="metric" id="monthTotal">0 บาท</div><div class="muted" id="monthDays"></div></div>
+<div class="card"><div class="label">รายได้วันนี้</div><div class="metric" id="todayTotal">0 บาท</div><div class="muted" id="todayInfo"></div></div>
+<div class="card"><div class="label">ค่ารอบฟอกไต</div><div class="metric" id="roundTotal">0 บาท</div><div class="muted" id="roundInfo">0 รอบ</div></div>
+<div class="card"><div class="label">Workload</div><div class="metric" id="workTotal">0 บาท</div><div class="muted" id="workInfo"></div></div>
+</div>
+<div class="card"><h2>เป้าหมายรายได้ต่อเดือน</h2><div id="goalText">ยังไม่ได้ตั้งเป้าหมาย</div><div class="progress"><div id="goalBar" style="width:0"></div></div><div class="muted" id="goalSub"></div></div>
+<div class="card"><h2>สรุปการทำงาน</h2><div class="cards"><div><div class="label">จำนวนรอบ</div><strong id="roundsCount">0</strong></div><div><div class="label">วันที่ทำงาน</div><strong id="workdaysCount">0</strong></div><div><div class="label">วันหยุดที่บันทึก</div><strong id="offdaysCount">0</strong></div><div><div class="label">วันที่บันทึก</div><strong id="entriesCount">0</strong></div></div></div>
+<div class="card"><h2>รายการล่าสุด</h2><div id="recent" class="muted">ยังไม่มีข้อมูล</div></div>
+</section>
+<section id="entry" class="hidden">
+<div class="card"><h2>บันทึกรายได้ประจำวัน</h2>
+<div class="formgrid">
+<div class="full"><label for="date">วันที่</label><input class="field" id="date" type="date"></div>
+<div class="full"><label>สถานะ</label><div class="row"><button type="button" class="status active" data-status="work">ทำงาน</button><button type="button" class="status" data-status="off">วันหยุด</button><button type="button" class="status" data-status="none">ลบรายการ</button></div></div>
+<div id="workFields" class="full formgrid">
+<div><label for="rounds">จำนวนรอบฟอกไต</label><input class="field" id="rounds" type="number" min="0" max="20" value="2" step="1"></div>
+<div><label for="workload">เงินพิเศษ Workload (บาท)</label><input class="field" id="workload" type="number" min="0" step=".01" value="0"></div>
+<div class="full"><label for="note">หมายเหตุ (ไม่บังคับ)</label><input class="field" id="note" maxlength="150" placeholder="เช่น เวรเช้า / เวรบ่าย"></div>
+</div>
+<div class="card full" style="background:var(--soft);margin:0"><div class="label">รายได้รวมวันนี้</div><div class="metric" id="entryTotal">1,200 บาท</div><div class="muted" id="breakdown"></div></div>
+<div class="full row"><button id="save" class="primary">บันทึกข้อมูล</button><button id="clearForm">ล้างแบบฟอร์ม</button><button id="delete" class="danger hidden">ลบรายการวันนี้</button></div>
+</div><div id="entryMessage" class="notice hidden"></div></div>
+</section>
+<section id="calendar" class="hidden"><div class="card"><h2>ปฏิทินรายได้</h2><div class="muted" style="margin-bottom:10px">แตะวันที่เพื่อเลือกวัน แล้วกดบันทึกหรือแก้ไข</div><div class="calendar" id="weekdays"></div><div class="calendar" id="days"></div><div class="notice" id="calDetail">เลือกวันที่เพื่อดูข้อมูล</div><button class="primary" style="width:100%;margin-top:10px" id="calEdit">บันทึก / แก้ไขวันที่เลือก</button></div></section>
+<section id="history" class="hidden"><div class="card"><h2>ประวัติรายได้เดือนนี้</h2><div class="row" style="margin-bottom:10px"><select id="filter" class="field"><option value="all">ทั้งหมด</option><option value="work">เฉพาะวันที่ทำงาน</option><option value="off">เฉพาะวันหยุด</option></select><select id="sort" class="field"><option value="desc">ใหม่ไปเก่า</option><option value="asc">เก่าไปใหม่</option></select></div><div id="historyTotal" class="muted" style="margin-bottom:8px"></div><div class="tablewrap"><table><thead><tr><th>วันที่</th><th>รอบ</th><th>ค่ารอบ</th><th>Workload</th><th>รวม</th><th></th></tr></thead><tbody id="historyRows"></tbody></table></div><div id="noHistory" class="muted" style="padding:15px;text-align:center">ยังไม่มีข้อมูลเดือนนี้</div><button id="export" class="primary" style="width:100%;margin-top:12px">ส่งออก Excel (CSV)</button><div class="muted" style="margin-top:7px">ไฟล์ CSV เปิดด้วย Microsoft Excel ได้</div></div></section>
+<section id="settings" class="hidden">
+<div class="card"><h2>ตั้งค่ารายได้</h2><label for="rate">ค่าตอบแทนต่อรอบ (บาท)</label><input id="rate" class="field" type="number" min="0" step=".01"><div class="muted" style="margin:5px 0 14px">การเปลี่ยนอัตรามีผลกับรายการใหม่เท่านั้น รายการเก่าจะคงอัตราเดิม</div><label for="goal">เป้าหมายรายได้ต่อเดือน (บาท)</label><input id="goal" class="field" type="number" min="0" step="100" placeholder="เช่น 30000"><button id="saveSettings" class="primary" style="width:100%;margin-top:12px">บันทึกการตั้งค่า</button></div>
+<div class="card"><h2>สำรองข้อมูล</h2><p class="muted">ข้อมูลอยู่ในเบราว์เซอร์บนอุปกรณ์นี้ ไม่ได้ส่งไปเซิร์ฟเวอร์ของแอป กรุณาสำรองข้อมูลเป็นระยะ</p><button id="backup" style="width:100%">ดาวน์โหลดข้อมูลสำรอง (JSON)</button><label for="restore" style="margin-top:12px">นำเข้าข้อมูลสำรอง</label><input id="restore" class="field" type="file" accept=".json,application/json"><button id="erase" class="danger" style="width:100%;margin-top:12px">ลบข้อมูลทั้งหมด</button></div>
+</section>
+<footer>แอปนี้ไม่เก็บชื่อหรือข้อมูลระบุตัวผู้ป่วย · รายได้เป็นยอดก่อนหักภาษีหรือรายการหักอื่น ๆ · ใช้ปุ่มสำรองข้อมูลก่อนเปลี่ยนอุปกรณ์หรือล้างข้อมูลเบราว์เซอร์</footer>
+</main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),KEY='dialysis_income_tracker_v1';
+const today=()=>{let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fresh=()=>({rate:600,goal:0,records:{}});let db=fresh(),month=today().slice(0,7),selected=today(),status='work';
+try{let x=JSON.parse(localStorage.getItem(KEY)||'null');if(x)db={...fresh(),...x,records:x.records||{}}}catch(e){}
+const money=n=>Number(n||0).toLocaleString('th-TH',{maximumFractionDigits:2}),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dateFmt=s=>{if(!s)return'';let [y,m,d]=s.split('-');return `${d}/${m}/${y}`};
+const total=r=>r&&r.status==='work'?Number(r.rounds||0)*Number(r.rate||0)+Number(r.workload||0):0;
+const saveDB=()=>{try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){alert('บันทึกไม่สำเร็จ โปรดดาวน์โหลดข้อมูลสำรอง');return false}};
+const records=()=>Object.keys(db.records).filter(d=>d.startsWith(month)).sort();
+function setTab(t){document.querySelectorAll('main nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));['dashboard','entry','calendar','history','settings'].forEach(k=>$(k).classList.toggle('hidden',k!==t));if(t==='calendar')renderCalendar();if(t==='history')renderHistory();if(t==='settings'){ $('rate').value=db.rate;$('goal').value=db.goal}}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+function render(){let [y,m]=month.split('-').map(Number);$('monthLabel').textContent=new Intl.DateTimeFormat('th-TH',{month:'long',year:'numeric'}).format(new Date(y,m-1,1));$('rateTop').textContent=money(db.rate)+' บาท';renderDash();renderCalendar();renderHistory()}
+function changeMonth(n){let [y,m]=month.split('-').map(Number),d=new Date(y,m-1+n,1);month=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');render()}
+$('prev').onclick=()=>changeMonth(-1);$('next').onclick=()=>changeMonth(1);$('now').onclick=()=>{month=today().slice(0,7);render()};
+function renderDash(){let ds=records(),rs=ds.map(d=>db.records[d]),work=rs.filter(r=>r.status==='work'),off=rs.filter(r=>r.status==='off'),rounds=work.reduce((a,r)=>a+Number(r.rounds||0),0),rp=work.reduce((a,r)=>a+Number(r.rounds||0)*Number(r.rate||0),0),wl=work.reduce((a,r)=>a+Number(r.workload||0),0),sum=rp+wl;
+$('monthTotal').textContent=money(sum)+' บาท';$('monthDays').textContent=ds.length+' วันที่บันทึก';let tr=db.records[today()];$('todayTotal').textContent=money(total(tr))+' บาท';$('todayInfo').textContent=tr?(tr.status==='off'?'วันหยุด':tr.rounds+' รอบ · Workload '+money(tr.workload)+' บาท'):'ยังไม่มีข้อมูล';
+$('roundTotal').textContent=money(rp)+' บาท';$('roundInfo').textContent=rounds+' รอบ';$('workTotal').textContent=money(wl)+' บาท';$('workInfo').textContent=work.filter(r=>Number(r.workload)>0).length+' วันที่มี Workload';
+$('roundsCount').textContent=rounds;$('workdaysCount').textContent=work.length;$('offdaysCount').textContent=off.length;$('entriesCount').textContent=ds.length;
+let g=Number(db.goal)||0,p=g?Math.min(100,sum/g*100):0;$('goalText').textContent=g?money(sum)+' / '+money(g)+' บาท':'ยังไม่ได้ตั้งเป้าหมาย';$('goalBar').style.width=p+'%';$('goalSub').textContent=g?(sum>=g?'ถึงเป้าหมายแล้ว เกิน '+money(sum-g)+' บาท':'เหลืออีก '+money(g-sum)+' บาท'):'ตั้งเป้าหมายได้ที่เมนูตั้งค่า';
+let recent=ds.slice().reverse().slice(0,5);$('recent').innerHTML=recent.length?recent.map(d=>{let r=db.records[d];return `<div style="display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)"><div>${dateFmt(d)}<div class="muted">${r.status==='off'?'วันหยุด':r.rounds+' รอบ · Workload '+money(r.workload)}</div></div><div style="text-align:right"><b>${money(total(r))} ฿</b><br><button data-edit="${d}" style="padding:4px 8px;font-size:12px">แก้ไข</button></div></div>`}).join(''):'ยังไม่มีข้อมูลเดือนนี้';bindEdit()}
+function bindEdit(){document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>loadEntry(b.dataset.edit))}
+function selectStatus(s){status=s;document.querySelectorAll('.status').forEach(b=>b.classList.toggle('active',b.dataset.status===s));$('workFields').classList.toggle('hidden',s!=='work');calc()}
+document.querySelectorAll('.status').forEach(b=>b.onclick=()=>selectStatus(b.dataset.status));
+function calc(){let n=Math.max(0,Math.min(20,Math.floor(Number($('rounds').value)||0))),w=Math.max(0,Number($('workload').value)||0),base=n*Number(db.rate||0);$('entryTotal').textContent=money(status==='work'?base+w:0)+' บาท';$('breakdown').textContent=status==='work'?'ค่ารอบ '+money(base)+' + Workload '+money(w):status==='off'?'วันหยุด · ไม่มีรายได้ที่บันทึก':'ลบรายการของวันนี้'}
+['rounds','workload'].forEach(id=>$(id).addEventListener('input',calc));
+function loadEntry(d){selected=d;let r=db.records[d];$('date').value=d;$('rounds').value=r?r.rounds:2;$('workload').value=r?r.workload:0;$('note').value=r?r.note||'':'';$('delete').classList.toggle('hidden',!r);$('entryMessage').classList.add('hidden');selectStatus(r?r.status:'work');setTab('entry')}
+$('date').value=today();$('date').onchange=()=>{selected=$('date').value||today();let r=db.records[selected];if(r){$('rounds').value=r.rounds;$('workload').value=r.workload;$('note').value=r.note||'';selectStatus(r.status);$('delete').classList.remove('hidden')}else{$('rounds').value=2;$('workload').value=0;$('note').value='';$('delete').classList.add('hidden');selectStatus('work')}};
+$('save').onclick=()=>{let d=$('date').value;if(!d)return alert('กรุณาเลือกวันที่');if(status==='none'){delete db.records[d]}else{db.records[d]={status,rounds:status==='work'?Math.max(0,Math.min(20,Math.floor(Number($('rounds').value)||0))):0,rate:Number(db.rate)||0,workload:status==='work'?Math.max(0,Number($('workload').value)||0):0,note:status==='work'?$('note').value.trim():'',updatedAt:new Date().toISOString()}}if(!saveDB())return;month=d.slice(0,7);selected=d;render();loadEntry(d);$('entryMessage').textContent=status==='none'?'ลบรายการแล้ว':'บันทึกข้อมูล '+dateFmt(d)+' เรียบร้อยแล้ว';$('entryMessage').classList.remove('hidden')};
+$('delete').onclick=()=>{let d=$('date').value;delete db.records[d];if(saveDB()){render();loadEntry(d)}};
+$('clearForm').onclick=()=>{ $('rounds').value=2;$('workload').value=0;$('note').value='';selectStatus('work');calc()};
+function renderCalendar(){ $('weekdays').innerHTML=['อา','จ','อ','พ','พฤ','ศ','ส'].map(x=>`<div class="muted" style="text-align:center">${x}</div>`).join('');let [y,m]=month.split('-').map(Number),first=new Date(y,m-1,1).getDay(),count=new Date(y,m,0).getDate(),html='';for(let i=0;i<first;i++)html+='<div></div>';for(let i=1;i<=count;i++){let d=month+'-'+String(i).padStart(2,'0'),r=db.records[d];html+=`<button class="day ${d===selected?'selected':''}" data-day="${d}">${i}<small>${r?(r.status==='off'?'วันหยุด':money(total(r))):'·'}</small></button>`}$('days').innerHTML=html;document.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{selected=b.dataset.day;renderCalendar()});let r=db.records[selected];$('calDetail').innerHTML=`<b>${dateFmt(selected)}</b><br>${r?(r.status==='off'?'วันหยุด':`จำนวนรอบ ${r.rounds} รอบ<br>ค่ารอบ ${money(r.rounds*r.rate)} บาท<br>Workload ${money(r.workload)} บาท<br><b>รวม ${money(total(r))} บาท</b>`):'ยังไม่มีรายการบันทึก'}${r&&r.note?'<br>หมายเหตุ: '+esc(r.note):''}`}
+$('calEdit').onclick=()=>loadEntry(selected);
+$('filter').onchange=renderHistory;$('sort').onchange=renderHistory;
+function renderHistory(){let ds=records().filter(d=>$('filter').value==='all'||db.records[d].status===$('filter').value);if($('sort').value==='desc')ds.reverse();$('historyTotal').textContent=ds.length+' รายการ · รวม '+money(ds.reduce((s,d)=>s+total(db.records[d]),0))+' บาท';$('noHistory').style.display=ds.length?'none':'block';$('historyRows').innerHTML=ds.map(d=>{let r=db.records[d];return `<tr><td>${dateFmt(d)}${r.status==='off'?'<br>วันหยุด':''}</td><td>${r.status==='work'?r.rounds:'-'}</td><td>${money(r.status==='work'?r.rounds*r.rate:0)}</td><td>${money(r.workload)}</td><td><b>${money(total(r))}</b></td><td><button data-edit="${d}">แก้ไข</button></td></tr>`}).join('');bindEdit()}
+function download(blob,name){let a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200)}
+$('export').onclick=()=>{let ds=records(),rows=[['วันที่','สถานะ','จำนวนรอบ','ค่ารอบต่อครั้ง','รวมค่ารอบ (บาท)','Workload (บาท)','รายได้รวม (บาท)','หมายเหตุ'],...ds.map(d=>{let r=db.records[d];return[d,r.status==='off'?'วันหยุด':'ทำงาน',r.rounds||0,r.rate||0,(r.rounds||0)*(r.rate||0),r.workload||0,total(r),r.note||'']})];let csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');download(new Blob([csv],{type:'text/csv;charset=utf-8'}),'รายได้ไตเทียม_'+month+'.csv')};
+$('saveSettings').onclick=()=>{let rate=Number($('rate').value),goal=Number($('goal').value);if(!Number.isFinite(rate)||rate<0||!Number.isFinite(goal)||goal<0)return alert('กรุณากรอกจำนวนเงินเป็นศูนย์หรือค่าบวก');db.rate=rate;db.goal=goal;if(saveDB())render()};
+$('backup').onclick=()=>download(new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'}),'สำรองรายได้ไตเทียม_'+today()+'.json');
+$('restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let p=JSON.parse(await f.text());if(!p||!p.records||!Number.isFinite(Number(p.rate))||Number(p.rate)<0)throw 0;if(!confirm('นำเข้าข้อมูลและแทนที่ข้อมูลปัจจุบันทั้งหมดหรือไม่?'))return;db={rate:Number(p.rate),goal:Math.max(0,Number(p.goal)||0),records:{}};for(let [d,r] of Object.entries(p.records))if(/^\d{4}-\d{2}-\d{2}$/.test(d)&&r&&['work','off'].includes(r.status))db.records[d]={status:r.status,rounds:Math.max(0,Number(r.rounds)||0),rate:Math.max(0,Number(r.rate)||0),workload:Math.max(0,Number(r.workload)||0),note:String(r.note||'').slice(0,150)};if(saveDB())render();alert('นำเข้าข้อมูลสำเร็จ')}catch(e){alert('ไฟล์สำรองไม่ถูกต้อง')}finally{$('restore').value=''}};
+$('erase').onclick=()=>{if(confirm('ยืนยันลบรายได้ ประวัติ วันหยุด และเป้าหมายทั้งหมด? สำรองข้อมูลก่อนหากต้องการเก็บไว้')){db=fresh();if(saveDB()){month=today().slice(0,7);selected=today();render()}}};
+render();calc();
+})();
+</script></body></html>
